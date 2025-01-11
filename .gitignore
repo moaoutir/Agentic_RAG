@@ -1,7 +1,7 @@
+*.db
 env/
 .vscode/
 *.sqlite3
-*.db
 *.chainlit
 **/__pycache__/
 

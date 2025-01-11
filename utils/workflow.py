@@ -191,7 +191,6 @@ def recipe_recommendation(state):
         else:
             print("Recipe is not suitable for user")    
 
-    return {"documents": documents, "question": question}
 
 def decide_to_generate(state):
     """
