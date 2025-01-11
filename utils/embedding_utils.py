@@ -5,7 +5,7 @@ from chromadb.api.types import EmbeddingFunction
 import os
 
 
-chromaDB_persist_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), "../databases"))
+chromaDB_persist_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), "../databases/recipes"))
 # print(chromaDB_persist_directory)
 # import chromadb
 # print(os.path.exists(chromaDB_persist_directory))

@@ -15,9 +15,10 @@ from .web_search_tool import spoonacular_search
 
 def format_docs(docs):
     formatted_docs = [
-        "metadata: " + json.dumps(doc.metadata, indent=2) + " name_recipe:" + doc.page_content
+        "metadata: " + str(doc.metadata) + " name_recipe:" + doc.page_content
         for doc in docs
     ]
+    print(formatted_docs)
     return formatted_docs
 
 # Retrieval Grader
@@ -38,11 +39,19 @@ retrieval_grader = prompt | llm | JsonOutputParser()
 
 # Answer question
 prompt = PromptTemplate(
-        template = """You are an expert chef specializing in finding and creating recipes based on a given context.
-    Use the following context to create a recipe. Ensure the recipe only includes ingredients, descriptions, instructions, and nutritional information explicitly mentioned in the context. Be sure to specify the quantity of each ingredient where provided.
-    Do not add any instructions that are not referenced in the context.
-    Provide a detailed description of the recipe, including the title, a list of ingredients (with quantities), and step-by-step instructions.
-    Keep the recipe clear and precise, suitable for someone to follow and recreate.
+        template = """You are an expert chef specializing in creating and refining recipes with precise ingredient measurements.
+    Context and Content Guidelines: Use the provided context as the primary reference to craft a recipe. If any ingredient units or measurements are missing in the context, use your own knowledge and expertise to assign the most appropriate unit and quantity, ensuring accuracy and consistency.
+    Restrictions: Do not introduce instructions, or nutritional details not mentioned in or directly derivable from the context.
+    Output Requirements: Provide:
+    A recipe title in bold.
+    A description of the recipe.
+    A detailed ingredients list with precise quantities and units (e.g., grams, kilograms, cups, tablespoons, teaspoons, etc.).
+    Step-by-step instructions that are clear and easy to follow.
+    nutritional details if provided in the context
+    Ensure the recipe is clear, precise, and concise, adhering to a character limit of 4000.
+    Focus on correctness, particularly in ingredient units, even if those details are not specified in the context.
+    Use strengthening language such as "Mandatory" or "Imperative" to highlight critical instructions.
+    Write all titles in bold for emphasis.
     Question: {question}
     Context: {context}
     """,
@@ -78,6 +87,7 @@ def retrieve(state):
 
     # Retrieval
     documents = retriever_chain.invoke(question)
+    # print(documents)
     return {"documents": documents, "question": question}
 
 def generate(state):
@@ -158,6 +168,7 @@ def web_search(state):
     else:
         documents = [web_results]
     return {"documents": documents, "question": question}
+
 
 def decide_to_generate(state):
     """
