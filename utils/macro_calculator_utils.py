@@ -21,9 +21,9 @@ def daily_calorie_needs(activityLevel, goal, bmr):
     dailyCaloriesNeeded = int(bmr * activity_level_index)
 
     goal_adjustments = {
-        1: 0,                    # Maintain weight
+        1: 0,               # Maintain weight
         2: -500,            # Extreme weight loss (0.5 kg/week)
-        3: 500,                      # Weight gain (0.5 kg/week)
+        3: 500,             # Weight gain (0.5 kg/week)
     }
 
     calorie_adjustment = goal_adjustments.get(goal)
@@ -43,7 +43,8 @@ def macro_calculator(calories):
 
     return calories, calories_in_protein, calories_in_carbs, calories_in_fat
 
-def macro_nutrition(weightInKgs, heightInCentimeters, age, maleOrFemale,activityLevel, goal):
+
+def macro_nutrition(weightInKgs, heightInCentimeters, age, activityLevel, goal, maleOrFemale):
     bmr = bmr_calculation(weightInKgs, heightInCentimeters, age, maleOrFemale)
     needed_calories = daily_calorie_needs(activityLevel, goal, bmr)
     return macro_calculator(needed_calories)

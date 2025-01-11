@@ -12,9 +12,9 @@ from chainlit.input_widget import Select, Slider,TextInput
 load_dotenv()
 path_users_macro_nutrition = "./databases/users/users_macro_nutrition.db"
 
-def handle_query(question):
+def handle_query(question, user_id):
     try:
-        result = langGraph_function(question)
+        result = langGraph_function(question, user_id)
         logging.info(f"Workflow Result: {result}")
         return result
     except Exception as e:
@@ -34,8 +34,8 @@ def oauth_callback(
 @cl.on_chat_start
 async def start():
     initialize_database()
-    id = cl.user_session.get("user").identifier
-    user_data = get_user_data(id)
+    user_id = cl.user_session.get("user").identifier
+    user_data = get_user_data(user_id)
     print(user_data)
     if user_data is None:
         print("User data is None")
@@ -96,8 +96,9 @@ async def setup_agent(settings):
 async def main(message: cl.Message):
     """Handle incoming user messages."""
     try:
+        user_id = cl.user_session.get("user").identifier
         user_message = message.content
-        response = handle_query(user_message)
+        response = handle_query(user_message, user_id)
         await cl.Message(content=response).send()
     except Exception as e:
         await cl.Message(content=f"An error occurred: {e}").send()

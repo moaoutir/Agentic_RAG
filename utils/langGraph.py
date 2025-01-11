@@ -4,7 +4,7 @@ from pprint import pprint
 
 app = workflow.compile()
 
-def langGraph_function(question: str):
+def langGraph_function(question: str, user_id: str):
     """
     Runs the compiled workflow with the given question.
     
@@ -15,7 +15,7 @@ def langGraph_function(question: str):
         str: The generation result from the workflow.
     """
     print(f"Running workflow with question: {question}")
-    inputs = {"question": question}
+    inputs = {"question": question, "user_id": user_id}
     value = None
     for output in app.stream(inputs):
         for key, value in output.items():

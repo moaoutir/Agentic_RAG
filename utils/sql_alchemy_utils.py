@@ -1,11 +1,7 @@
 import sqlalchemy as sa
 
 engine = sa.create_engine("sqlite:///databases/users/users_macro_nutrition.db",
-    connect_args={'timeout': 10},
-    pool_size=5,
-    max_overflow=10,
-    pool_timeout=30,
-    pool_recycle=3600
+    connect_args={'timeout': 10}
                           )
 connection = engine.connect()
 

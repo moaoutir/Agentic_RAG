@@ -11,6 +11,8 @@ from langgraph.graph import END, StateGraph
 from .embedding_utils import retriever
 from .llm_utils import llm
 from .web_search_tool import spoonacular_search
+from .macro_calculator_utils import macro_nutrition
+from .sql_alchemy_utils import  get_user_data, initialize_database
 
 
 def format_docs(docs):
@@ -18,7 +20,6 @@ def format_docs(docs):
         "metadata: " + str(doc.metadata) + " name_recipe:" + doc.page_content
         for doc in docs
     ]
-    print(formatted_docs)
     return formatted_docs
 
 # Retrieval Grader
@@ -63,6 +64,7 @@ rag_chain = prompt | llm | StrOutputParser()
 
 ### State
 class GraphState(TypedDict):
+    user_id : str
     question : str
     generation : str
     web_search : str
@@ -82,11 +84,9 @@ def retrieve(state):
     print("---RETRIEVE---")
     question = state["question"]
 
-    # Chain
-    retriever_chain = (retriever | format_docs)
 
     # Retrieval
-    documents = retriever_chain.invoke(question)
+    documents = retriever.invoke(question)
     # print(documents)
     return {"documents": documents, "question": question}
 
@@ -129,8 +129,8 @@ def grade_documents(state):
     filtered_docs = []
     web_search = "No"
     for d in documents:
-        name_recipe = re.search(r'name_recipe:\s*(\S.*)', d).group(1)
-        score = retrieval_grader.invoke({"question": question, "document": name_recipe})
+        # name_recipe = re.search(r'name_recipe:\s*(\S.*)', d).group(1)
+        score = retrieval_grader.invoke({"question": question, "document": d.page_content})
         grade = score['score']
         # Document relevant
         if grade.lower() == "yes":
@@ -170,6 +170,29 @@ def web_search(state):
     return {"documents": documents, "question": question}
 
 
+
+def recipe_recommendation(state):
+    """
+    Recipe recommendation based on user macro nutrition requirements
+    """
+
+    print("---RECIPE RECOMMENDATION---")
+    initialize_database()
+    user_id = state["user_id"]
+    documents = state["documents"]
+    
+    user_data = get_user_data(user_id)
+    if user_data:
+        calories, calories_in_protein, calories_in_carbs, calories_in_fat = macro_nutrition(user_data[1], user_data[2], user_data[3], user_data[4], user_data[5], user_data[6])
+        
+        if calories > documents[0].metadata['Calories'] and calories_in_protein > documents[0].metadata['ProteinContent'] and \
+        calories_in_carbs > documents[0].metadata['CarbohydrateContent'] and calories_in_fat > documents[0].metadata['FatContent']:
+            print("Recipe is suitable for user")
+        else:
+            print("Recipe is not suitable for user")    
+
+    return {"documents": documents, "question": question}
+
 def decide_to_generate(state):
     """
     Determines whether to generate an answer, or add web search
@@ -202,6 +225,7 @@ workflow.add_node("websearch", web_search)
 workflow.add_node("retrieve", retrieve)
 workflow.add_node("grade_documents", grade_documents)
 workflow.add_node("generate", generate)
+workflow.add_node("recipe_recommendation", recipe_recommendation)
 
 workflow.set_entry_point("retrieve")
 workflow.add_edge("retrieve", "grade_documents")
@@ -210,10 +234,11 @@ workflow.add_conditional_edges(
     decide_to_generate,
     {
         "websearch": "websearch",
-        "generate": "generate",
+        "generate": "recipe_recommendation",
     },
 )
-workflow.add_edge("websearch", "generate")
+workflow.add_edge("websearch", "recipe_recommendation")
+workflow.add_edge("recipe_recommendation", "generate")
 workflow.add_edge("generate", END)
 
 

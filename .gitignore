@@ -1,5 +1,7 @@
 env/
 .vscode/
 *.sqlite3
+/databases/users/*.db
 *.chainlit
 **/__pycache__/
+
